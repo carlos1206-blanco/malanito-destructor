@@ -53,3 +53,4 @@ las plataformas, el HUD y el jefe final están recortados del video original.
 
 - Enemigos comunes, Horno Microondas y Zepelín siguen dibujados por código (no hay material de ellos en el video).
 - Cinturón de Gravedad Inversa, multijugador y ranking en línea no están implementados; el guardado es local (`localStorage`).
+- publicado en githab
