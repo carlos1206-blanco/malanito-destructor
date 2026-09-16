@@ -11,16 +11,51 @@ cv.width = W * RS; cv.height = H * RS;
 ctx.imageSmoothingEnabled = false;
 
 let SCALE = 1, OFFX = 0, OFFY = 0;
+let lastWW = 0, lastWH = 0;
+
 function fit() {
-  const ww = window.innerWidth, wh = window.innerHeight;
+  const vv = window.visualViewport;
+  let ww = window.innerWidth;
+  let wh = window.innerHeight;
+  if (vv && vv.width > 0 && vv.height > 0) {
+    ww = Math.round(vv.width);
+    wh = Math.round(vv.height);
+  } else if (document.documentElement && document.documentElement.clientWidth > 0) {
+    ww = document.documentElement.clientWidth;
+    wh = document.documentElement.clientHeight;
+  }
+  if (!ww || !wh) {
+    ww = window.innerWidth || 480;
+    wh = window.innerHeight || 270;
+  }
   SCALE = Math.min(ww / W, wh / H);
+  if (SCALE <= 0 || !isFinite(SCALE)) SCALE = 1;
   const cw = Math.floor(W * SCALE), ch = Math.floor(H * SCALE);
-  OFFX = Math.floor((ww - cw) / 2); OFFY = Math.floor((wh - ch) / 2);
-  cv.style.width = cw + 'px'; cv.style.height = ch + 'px';
-  cv.style.left = OFFX + 'px'; cv.style.top = OFFY + 'px';
-  document.getElementById('rotate').style.display = (wh > ww * 1.05) ? 'flex' : 'none';
+  OFFX = Math.floor((ww - cw) / 2);
+  OFFY = Math.floor((wh - ch) / 2);
+  cv.style.width = cw + 'px';
+  cv.style.height = ch + 'px';
+  cv.style.left = OFFX + 'px';
+  cv.style.top = OFFY + 'px';
+  lastWW = ww; lastWH = wh;
+
+  const rot = document.getElementById('rotate');
+  if (rot) {
+    rot.style.display = (wh > ww * 1.05) ? 'flex' : 'none';
+  }
 }
-window.addEventListener('resize', fit); fit();
+
+window.addEventListener('resize', fit);
+window.addEventListener('orientationchange', () => { fit(); setTimeout(fit, 50); setTimeout(fit, 150); setTimeout(fit, 300); setTimeout(fit, 600); });
+document.addEventListener('fullscreenchange', () => { fit(); setTimeout(fit, 100); setTimeout(fit, 300); });
+document.addEventListener('webkitfullscreenchange', () => { fit(); setTimeout(fit, 100); setTimeout(fit, 300); });
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', fit);
+  window.visualViewport.addEventListener('scroll', fit);
+}
+window.addEventListener('load', () => { fit(); setTimeout(fit, 100); setTimeout(fit, 300); });
+document.addEventListener('DOMContentLoaded', () => { fit(); setTimeout(fit, 100); });
+fit();
 
 // ---------- utilidades ----------
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -131,18 +166,21 @@ const Input = {
       const t = this.touches[id]; any = true;
       const b = this.btn;
       const dp = b.dpad;
-      if (t.x < W * 0.42 && t.y > H * 0.45) { // zona cruceta amplia
+      // Zona cruceta amplia (soporta pantallas pequeñas y bordes negros)
+      if (t.x < W * 0.46 && t.y > H * 0.35) {
         const dx = t.x - dp.x, dy = t.y - dp.y;
-        if (dy > 20 && Math.abs(dy) > Math.abs(dx) * 0.8) d = true;
-        else if (dy < -24 && Math.abs(dy) > Math.abs(dx) * 0.8) u = true;
-        if (dx < -10 && Math.abs(dx) >= Math.abs(dy) * 0.5) l = true;
-        if (dx > 10 && Math.abs(dx) >= Math.abs(dy) * 0.5) r = true;
-        if (dy > 20 && Math.abs(dx) > 18) { if (dx < 0) l = true; else r = true; }
+        if (dy > 18 && Math.abs(dy) > Math.abs(dx) * 0.65) d = true;
+        else if (dy < -20 && Math.abs(dy) > Math.abs(dx) * 0.65) u = true;
+        if (dx < -8 && Math.abs(dx) >= Math.abs(dy) * 0.4) l = true;
+        if (dx > 8 && Math.abs(dx) >= Math.abs(dy) * 0.4) r = true;
+        if (dy > 16 && Math.abs(dx) > 12) { if (dx < 0) l = true; else r = true; }
+        if (t.x < dp.x - 10) l = true;
       }
-      if (Math.hypot(t.x - b.jump.x, t.y - b.jump.y) < b.jump.r + 8) jump = true;
-      if (Math.hypot(t.x - b.shoot.x, t.y - b.shoot.y) < b.shoot.r + 8) shoot = true;
-      if (Math.hypot(t.x - b.kick.x, t.y - b.kick.y) < b.kick.r + 6) kick = true;
-      if (t.x >= b.burger.x - 4 && t.x <= b.burger.x + b.burger.w + 4 && t.y >= b.burger.y - 4 && t.y <= b.burger.y + b.burger.h + 4) burger = true;
+      // Botones de acción con radio extendido para mayor comodidad en celulares
+      if (Math.hypot(t.x - b.jump.x, t.y - b.jump.y) < b.jump.r + 14 || (t.x > b.jump.x - 12 && t.x < b.jump.x + 35 && t.y > b.jump.y - 15 && t.y < b.jump.y + 35)) jump = true;
+      if (Math.hypot(t.x - b.shoot.x, t.y - b.shoot.y) < b.shoot.r + 14 || (t.x > b.shoot.x - 22 && t.x < b.shoot.x + 22 && t.y > b.shoot.y - 20 && t.y < b.shoot.y + 25)) shoot = true;
+      if (Math.hypot(t.x - b.kick.x, t.y - b.kick.y) < b.kick.r + 12 || (t.x > b.kick.x - 18 && t.x < b.kick.x + 25 && t.y > b.kick.y - 20 && t.y < b.kick.y + 25)) kick = true;
+      if (t.x >= b.burger.x - 10 && t.x <= b.burger.x + b.burger.w + 14 && t.y >= b.burger.y - 10 && t.y <= b.burger.y + b.burger.h + 14) burger = true;
     }
     this.jumpP = jump && !this.jump; this.kickP = kick && !this.kick; this.burgerP = burger && !this.burger;
     this.shootP = shoot && !this.shoot;
@@ -152,7 +190,7 @@ const Input = {
   // toque puntual (para menús): devuelve {x,y} del primer toque nuevo en este frame
   tap: null,
   drawTouchUI(p) {
-    if (!IS_TOUCH) return;
+    if (!IS_TOUCH && !hasTouch) return;
     const b = this.btn;
     ctx.globalAlpha = 0.28;
     // cruceta (botones redondeados y más grandes)
@@ -214,29 +252,45 @@ const Input = {
     ctx.globalAlpha = 1;
   }
 };
+let hasTouch = IS_TOUCH;
 window.addEventListener('keydown', e => { Input.keys[e.code] = true; if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault(); Audio.init(); });
 window.addEventListener('keyup', e => { Input.keys[e.code] = false; });
-function toGame(t) { return { x: (t.clientX - OFFX) / SCALE, y: (t.clientY - OFFY) / SCALE }; }
+function toGame(t) { return { x: (t.clientX - OFFX) / (SCALE || 1), y: (t.clientY - OFFY) / (SCALE || 1) }; }
 function onTouchStart(e) {
-  e.preventDefault(); Audio.init();
-  for (const t of e.changedTouches) { const g = toGame(t); Input.touches[t.identifier] = g; Input.tap = g; }
+  hasTouch = true; Audio.init();
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    const t = e.changedTouches[i]; const g = toGame(t); Input.touches[t.identifier] = g; Input.tap = g;
+  }
   goFullscreen();
 }
-function onTouchMove(e) { e.preventDefault(); for (const t of e.changedTouches) { if (Input.touches[t.identifier]) Input.touches[t.identifier] = toGame(t); } }
-function onTouchEnd(e) { e.preventDefault(); for (const t of e.changedTouches) delete Input.touches[t.identifier]; }
-cv.addEventListener('touchstart', onTouchStart, { passive: false });
-cv.addEventListener('touchmove', onTouchMove, { passive: false });
-cv.addEventListener('touchend', onTouchEnd, { passive: false });
-cv.addEventListener('touchcancel', onTouchEnd, { passive: false });
-cv.addEventListener('mousedown', e => { Audio.init(); const g = toGame(e); Input.tap = g; if (!IS_TOUCH) { Input.touches['m'] = g; } });
-cv.addEventListener('mousemove', e => { if (Input.touches['m']) Input.touches['m'] = toGame(e); });
+function onTouchMove(e) {
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    const t = e.changedTouches[i]; if (Input.touches[t.identifier]) Input.touches[t.identifier] = toGame(t);
+  }
+}
+function onTouchEnd(e) {
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    delete Input.touches[e.changedTouches[i].identifier];
+  }
+}
+window.addEventListener('touchstart', onTouchStart, { passive: false });
+window.addEventListener('touchmove', onTouchMove, { passive: false });
+window.addEventListener('touchend', onTouchEnd, { passive: false });
+window.addEventListener('touchcancel', onTouchEnd, { passive: false });
+window.addEventListener('mousedown', e => { Audio.init(); const g = toGame(e); Input.tap = g; if (!IS_TOUCH && !hasTouch) { Input.touches['m'] = g; } });
+window.addEventListener('mousemove', e => { if (Input.touches['m']) Input.touches['m'] = toGame(e); });
 window.addEventListener('mouseup', () => { delete Input.touches['m']; });
 let fsTried = false;
 function goFullscreen() {
-  if (fsTried || !IS_TOUCH) return; fsTried = true;
+  if (fsTried || (!IS_TOUCH && !hasTouch)) return; fsTried = true;
   const el = document.documentElement;
-  try { (el.requestFullscreen || el.webkitRequestFullscreen).call(el); } catch (e) { }
+  try {
+    const rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen || el.mozRequestFullScreen;
+    if (rfs) rfs.call(el);
+  } catch (e) { }
   try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => { }); } catch (e) { }
+  setTimeout(fit, 100);
+  setTimeout(fit, 300);
 }
 
 // ============================================================

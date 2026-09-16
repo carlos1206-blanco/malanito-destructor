@@ -364,6 +364,13 @@ function sceneEnding() {
 let last = 0, acc = 0;
 function tick(now) {
   requestAnimationFrame(tick);
+  // Detección en tiempo real de cambios de pantalla/orientación
+  const vv = window.visualViewport;
+  const curW = (vv && vv.width > 0) ? Math.round(vv.width) : (window.innerWidth || 0);
+  const curH = (vv && vv.height > 0) ? Math.round(vv.height) : (window.innerHeight || 0);
+  if (curW > 0 && curH > 0 && (curW !== lastWW || curH !== lastWH)) {
+    fit();
+  }
   if (!last) last = now; let dt = (now - last) / 1000; last = now; if (dt > 0.1) dt = 0.1;
   acc += dt * 60 * FX.slow;
   let steps = 0;
