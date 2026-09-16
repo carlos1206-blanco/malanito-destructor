@@ -212,20 +212,20 @@ function drawStatic(a) { ctx.globalAlpha = a; for (let i = 0; i < 300; i++) R(Ma
 function drawHUD(p, lv) {
   // Botón de pausa siempre visible en la esquina superior derecha
   const pb = Input.btn.pause;
-  ctx.globalAlpha = 0.85;
-  R(pb.x, pb.y, pb.w, pb.h, '#100c1e');
-  ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.92;
+  R(pb.x, pb.y, pb.w, pb.h, '#1a1030');
+  ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 1.5;
   ctx.strokeRect(pb.x + 0.5, pb.y + 0.5, pb.w - 1, pb.h - 1);
   if (GAME.pause) {
     ctx.fillStyle = '#37f0ff';
     ctx.beginPath();
-    ctx.moveTo(pb.x + 8, pb.y + 4);
-    ctx.lineTo(pb.x + 18, pb.y + 10);
-    ctx.lineTo(pb.x + 8, pb.y + 16);
+    ctx.moveTo(pb.x + 10, pb.y + 5);
+    ctx.lineTo(pb.x + 22, pb.y + 11);
+    ctx.lineTo(pb.x + 10, pb.y + 17);
     ctx.fill();
   } else {
-    R(pb.x + 7, pb.y + 4, 3, 12, '#fff');
-    R(pb.x + 14, pb.y + 4, 3, 12, '#fff');
+    R(pb.x + 8, pb.y + 5, 4, 12, '#fff');
+    R(pb.x + 17, pb.y + 5, 4, 12, '#fff');
   }
   ctx.globalAlpha = 1;
 

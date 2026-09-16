@@ -143,7 +143,7 @@ const Input = {
     shoot: { x: 376, y: 238, r: 21, col: '#ff3fb0', label: 'PODER' },
     kick: { x: 428, y: 168, r: 19, col: '#ffcc33', label: 'PATADA' },
     burger: { x: 6, y: 40, w: 48, h: 22 },
-    pause: { x: W - 32, y: 34, w: 24, h: 20 },
+    pause: { x: W - 36, y: 32, w: 30, h: 22 },
     dpad: { x: 62, y: 208, r: 46 }
   },
   update() {
