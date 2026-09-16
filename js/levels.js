@@ -219,7 +219,7 @@ class BossMicroondas extends Boss {
         if (this.st % 40 === 0) { const gx = lv.camx + rint(0, 5) * 80; lv.eb.push({ x: gx + 40, y: 226, vx: 0, vy: 0, w: 80, h: 8, dmg: 1, type: 'orb', col: '#ff6a00', life: 60, floorFlame: true }); }
         if (this.st > 150) { this.go('idle'); } break;
       case 'kami': if (this.st % 6 === 0) spawnParts(this.x + rnd(-28, 28), this.y - rnd(0, 44), 3, ['#ff2b2b', '#ffd23f'], 1.5, 12); if (this.st === 200) { // detonación
-          shake(20); flash(20, '#ff8c00'); Audio.sExplo(true); buzz(300); spawnParts(this.x, this.y - 20, 80, ['#ff8c00', '#fff', '#ff2b2b'], 7, 50, 0.05); if (!p.dead) hurtPlayer(p, 3, Math.sign(p.x - this.x) * 4); this.die(lv, p); } break;
+          shake(20); flash(20, '#ff8c00'); Audio.sExplo(true); buzz(300); spawnParts(this.x, this.y - 20, 80, ['#ff8c00', '#fff', '#ff2b2b'], 7, 50, 0.05); this.die(lv, p); } break;
     }
   }
   takeHit(b, lv, p) { let d = b.dmg; if (!this.door && !b.charged && this.state !== 'kami') d = 0.5; this.damage(d, lv, p); spawnParts(b.x, b.y, 6, ['#fff', '#ff3fb0'], 2, 12); return 'hit'; }
