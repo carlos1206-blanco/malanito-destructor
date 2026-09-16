@@ -118,7 +118,10 @@ function startLevel(idx) {
 function updatePlay() {
   const lv = GAME.lv, p = GAME.p; lv.t++;
   if (Input.pauseP) { GAME.pause = !GAME.pause; Audio.sStatic(); }
-  if (GAME.pause) return;
+  if (GAME.pause) {
+    if (Input.tap) { GAME.pause = false; Audio.sStatic(); Input.tap = null; }
+    return;
+  }
   updateHazards(lv);
   if (lv.arena) updateArena(lv, p);
   if (lv.bonus) updateBonus(lv, p);
@@ -190,11 +193,42 @@ function drawPlay() {
   if (lv.bonus) drawBonusHUD(lv);
   if (lv.arena) drawArenaHUD(lv, p);
   Input.drawTouchUI(p);
-  if (GAME.pause) { ctx.globalAlpha = .55; R(0, 0, W, H, '#000'); ctx.globalAlpha = 1; drawStatic(0.25); txt('PAUSA', W / 2, 110, 16, '#fff', 'center'); txt(IS_TOUCH ? 'TRES DEDOS PARA REANUDAR' : 'P PARA REANUDAR', W / 2, 140, 7, '#aaa', 'center'); }
+  if (GAME.pause) {
+    ctx.globalAlpha = .75; R(0, 0, W, H, '#000'); ctx.globalAlpha = 1;
+    drawStatic(0.2);
+    const mw = 220, mh = 100, mx = W / 2 - mw / 2, my = H / 2 - mh / 2;
+    R(mx, my, mw, mh, '#120d24');
+    ctx.strokeStyle = '#ff3fb0'; ctx.lineWidth = 2; ctx.strokeRect(mx + 0.5, my + 0.5, mw - 1, mh - 1);
+    txt('JUEGO EN PAUSA', W / 2, my + 14, 10, '#ffd23f', 'center');
+    const rw = 140, rh = 26, rx = W / 2 - rw / 2, ry = my + 38;
+    R(rx, ry, rw, rh, '#25153a');
+    ctx.strokeStyle = '#37f0ff'; ctx.lineWidth = 1.5; ctx.strokeRect(rx + 0.5, ry + 0.5, rw - 1, rh - 1);
+    txt('▶ CONTINUAR', W / 2, ry + 8, 8, '#fff', 'center');
+    txt((IS_TOUCH || hasTouch) ? 'TOCA PARA REANUDAR' : 'P / ESC / ESPACIO / CLIC', W / 2, my + mh - 16, 6, '#8a7aa8', 'center');
+  }
 }
 function drawStatic(a) { ctx.globalAlpha = a; for (let i = 0; i < 300; i++) R(Math.random() * W, Math.random() * H, 2, 1, Math.random() < .5 ? '#fff' : '#888'); for (let y = 0; y < H; y += 3) R(0, y, W, 1, '#000'); ctx.globalAlpha = 1; }
 
 function drawHUD(p, lv) {
+  // Botón de pausa siempre visible en la esquina superior derecha
+  const pb = Input.btn.pause;
+  ctx.globalAlpha = 0.85;
+  R(pb.x, pb.y, pb.w, pb.h, '#100c1e');
+  ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 1;
+  ctx.strokeRect(pb.x + 0.5, pb.y + 0.5, pb.w - 1, pb.h - 1);
+  if (GAME.pause) {
+    ctx.fillStyle = '#37f0ff';
+    ctx.beginPath();
+    ctx.moveTo(pb.x + 8, pb.y + 4);
+    ctx.lineTo(pb.x + 18, pb.y + 10);
+    ctx.lineTo(pb.x + 8, pb.y + 16);
+    ctx.fill();
+  } else {
+    R(pb.x + 7, pb.y + 4, 3, 12, '#fff');
+    R(pb.x + 14, pb.y + 4, 3, 12, '#fff');
+  }
+  ctx.globalAlpha = 1;
+
   if (Assets.ok) { // HUD con el retrato del video
     R(4, 4, 32, 30, '#000'); spr('hud_portrait', 5, 5, 28, 'tl');
     // barra de vida (roja) y medidor calavera (verde → dorado al llenarse)

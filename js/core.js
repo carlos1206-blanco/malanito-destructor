@@ -143,6 +143,7 @@ const Input = {
     shoot: { x: 376, y: 238, r: 21, col: '#ff3fb0', label: 'PODER' },
     kick: { x: 428, y: 168, r: 19, col: '#ffcc33', label: 'PATADA' },
     burger: { x: 6, y: 40, w: 48, h: 22 },
+    pause: { x: W - 32, y: 34, w: 24, h: 20 },
     dpad: { x: 62, y: 208, r: 46 }
   },
   update() {
@@ -181,6 +182,7 @@ const Input = {
       if (Math.hypot(t.x - b.shoot.x, t.y - b.shoot.y) < b.shoot.r + 14 || (t.x > b.shoot.x - 22 && t.x < b.shoot.x + 22 && t.y > b.shoot.y - 20 && t.y < b.shoot.y + 25)) shoot = true;
       if (Math.hypot(t.x - b.kick.x, t.y - b.kick.y) < b.kick.r + 12 || (t.x > b.kick.x - 18 && t.x < b.kick.x + 25 && t.y > b.kick.y - 20 && t.y < b.kick.y + 25)) kick = true;
       if (t.x >= b.burger.x - 10 && t.x <= b.burger.x + b.burger.w + 14 && t.y >= b.burger.y - 10 && t.y <= b.burger.y + b.burger.h + 14) burger = true;
+      if (t.x >= b.pause.x - 10 && t.x <= b.pause.x + b.pause.w + 12 && t.y >= b.pause.y - 10 && t.y <= b.pause.y + b.pause.h + 12) pause = true;
     }
     this.jumpP = jump && !this.jump; this.kickP = kick && !this.kick; this.burgerP = burger && !this.burger;
     this.shootP = shoot && !this.shoot;
@@ -249,6 +251,14 @@ const Input = {
     }
     circ(b.kick, this.kick, ready);
     if (!ready) { ctx.globalAlpha = .45; ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(b.kick.x, b.kick.y, b.kick.r - 1, 0, 7); ctx.fill(); ctx.globalAlpha = .7; txt('PATADA', b.kick.x, b.kick.y - 3, 6, '#aaa', 'center', false); }
+    // Botón de pausa (esquina superior derecha)
+    const pb = b.pause;
+    ctx.globalAlpha = 0.8;
+    R(pb.x, pb.y, pb.w, pb.h, '#18122b');
+    ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 1;
+    ctx.strokeRect(pb.x + 0.5, pb.y + 0.5, pb.w - 1, pb.h - 1);
+    R(pb.x + 7, pb.y + 4, 3, 12, '#fff');
+    R(pb.x + 14, pb.y + 4, 3, 12, '#fff');
     ctx.globalAlpha = 1;
   }
 };
