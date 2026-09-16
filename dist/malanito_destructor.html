@@ -180,6 +180,7 @@ const Input = {
       if (t.x >= b.burger.x - 4 && t.x <= b.burger.x + b.burger.w + 4 && t.y >= b.burger.y - 4 && t.y <= b.burger.y + b.burger.h + 4) burger = true;
     }
     this.jumpP = jump && !this.jump; this.kickP = kick && !this.kick; this.burgerP = burger && !this.burger;
+    this.shootP = shoot && !this.shoot;
     this.pauseP = pause && !this.pause; this.anyP = any && !this.any; this.upP = u && !this.u;
     this.l = l; this.r = r; this.d = d; this.u = u; this.jump = jump; this.shoot = shoot; this.kick = kick; this.burger = burger; this.pause = pause; this.any = any;
   },
@@ -189,16 +190,26 @@ const Input = {
     if (!IS_TOUCH) return;
     const b = this.btn;
     ctx.globalAlpha = 0.28;
-    // cruceta
-    ctx.fillStyle = '#cfe8ff';
+    // cruceta (botones redondeados y más grandes)
     const dp = b.dpad;
-    ctx.fillRect(dp.x - 14, dp.y - 42, 28, 84); ctx.fillRect(dp.x - 42, dp.y - 14, 84, 28);
-    ctx.globalAlpha = 0.55; ctx.fillStyle = '#fff';
-    // flechas
-    ctx.fillRect(dp.x - 34, dp.y - 1, 6, 2); ctx.fillRect(dp.x + 28, dp.y - 1, 6, 2); ctx.fillRect(dp.x - 1, dp.y + 28, 2, 6); ctx.fillRect(dp.x - 1, dp.y - 34, 2, 6);
-    if (this.l) { ctx.globalAlpha = .5; ctx.fillStyle = '#fff'; ctx.fillRect(dp.x - 42, dp.y - 14, 28, 28); }
-    if (this.r) { ctx.globalAlpha = .5; ctx.fillStyle = '#fff'; ctx.fillRect(dp.x + 14, dp.y - 14, 28, 28); }
-    if (this.d) { ctx.globalAlpha = .5; ctx.fillStyle = '#fff'; ctx.fillRect(dp.x - 14, dp.y + 14, 28, 28); }
+    const drawDirBtn = (ox, oy, on, type) => {
+      ctx.globalAlpha = on ? 0.6 : 0.25;
+      ctx.fillStyle = '#cfe8ff';
+      ctx.beginPath(); ctx.arc(dp.x + ox, dp.y + oy, 26, 0, 7); ctx.fill();
+      ctx.globalAlpha = 0.8; ctx.fillStyle = on ? '#000' : '#fff';
+      ctx.beginPath();
+      if (type === 'l') { ctx.moveTo(dp.x + ox - 6, dp.y + oy); ctx.lineTo(dp.x + ox + 4, dp.y + oy - 7); ctx.lineTo(dp.x + ox + 4, dp.y + oy + 7); }
+      if (type === 'r') { ctx.moveTo(dp.x + ox + 6, dp.y + oy); ctx.lineTo(dp.x + ox - 4, dp.y + oy - 7); ctx.lineTo(dp.x + ox - 4, dp.y + oy + 7); }
+      if (type === 'u') { ctx.moveTo(dp.x + ox, dp.y + oy - 6); ctx.lineTo(dp.x + ox - 7, dp.y + oy + 4); ctx.lineTo(dp.x + ox + 7, dp.y + oy + 4); }
+      if (type === 'd') { ctx.moveTo(dp.x + ox, dp.y + oy + 6); ctx.lineTo(dp.x + ox - 7, dp.y + oy - 4); ctx.lineTo(dp.x + ox + 7, dp.y + oy - 4); }
+      ctx.fill();
+    };
+    drawDirBtn(-40, 0, this.l, 'l');
+    drawDirBtn(40, 0, this.r, 'r');
+    drawDirBtn(0, -40, this.u, 'u');
+    drawDirBtn(0, 40, this.d, 'd');
+    // centro
+    ctx.globalAlpha = 0.15; ctx.fillStyle = '#cfe8ff'; ctx.beginPath(); ctx.arc(dp.x, dp.y, 18, 0, 7); ctx.fill();
     // botones circulares
     const circ = (o, on, glow) => {
       ctx.globalAlpha = on ? 0.75 : (glow ? 0.55 : 0.3);
@@ -207,7 +218,25 @@ const Input = {
       ctx.globalAlpha = 0.9; txt(o.label, o.x, o.y - 3, 6, '#fff', 'center', false);
     };
     circ(b.jump, this.jump);
-    circ(b.shoot, this.shoot);
+    const shootCharged = p && p.charge >= 36;
+    if (shootCharged) {
+      ctx.globalAlpha = 0.5 + 0.4 * Math.sin(frame * 0.35);
+      ctx.fillStyle = '#ff3fb0';
+      ctx.beginPath(); ctx.arc(b.shoot.x, b.shoot.y, b.shoot.r + 5 + Math.sin(frame * 0.35) * 2, 0, 7); ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+      for (let i = 0; i < 4; i++) {
+        const a = frame * 0.25 + i * 1.57;
+        ctx.beginPath();
+        ctx.moveTo(b.shoot.x + Math.cos(a) * (b.shoot.r + 2), b.shoot.y + Math.sin(a) * (b.shoot.r + 2));
+        ctx.lineTo(b.shoot.x + Math.cos(a + 0.2) * (b.shoot.r + 7), b.shoot.y + Math.sin(a + 0.2) * (b.shoot.r + 7));
+        ctx.stroke();
+      }
+    } else if (p && p.charge > 0) {
+      const prog = Math.min(1, p.charge / 36);
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.globalAlpha = 0.85;
+      ctx.beginPath(); ctx.arc(b.shoot.x, b.shoot.y, b.shoot.r + 3, -Math.PI / 2, -Math.PI / 2 + prog * Math.PI * 2); ctx.stroke();
+    }
+    circ(b.shoot, this.shoot, shootCharged);
     const ready = p && p.meter >= 100;
     if (ready) {
       ctx.globalAlpha = 0.5 + 0.4 * Math.sin(frame * 0.3); ctx.fillStyle = '#ffe680'; ctx.beginPath(); ctx.arc(b.kick.x, b.kick.y, b.kick.r + 5 + Math.sin(frame * .3) * 2, 0, 7); ctx.fill();
@@ -452,14 +481,14 @@ function drawCoin(x, y, t) {
 function newPlayer(prev) {
   const p = {
     x: 40, y: 200, w: 16, h: 40, vx: 0, vy: 0, onGround: false, face: 1, eatT: 0,
-    hp: 6, maxHp: 6, burgers: 1, coins: 0, meter: 0, charge: 0, fireCd: 0, fireRate: 1,
+    hp: 6, maxHp: 6, burgers: 1, coins: 0, meter: 0, charge: 0, fireCd: 0, fireRate: 1, rayoCd: 0,
     inv: 0, items: { shoes: false, visor: false, glove: false }, jumps: 0, fries: 0,
     kick: null, dead: false, anim: 0, animT: 0, score: 0, dropThin: 0, cpx: 40, cpy: 200,
     hurtT: 0, st: 'idle', airKills: 0, mult: 1
   };
   if (prev) { // conservar progreso entre niveles
     p.hp = prev.hp; p.maxHp = prev.maxHp; p.burgers = prev.burgers; p.coins = prev.coins; p.meter = prev.meter;
-    p.fireRate = prev.fireRate; p.items = Object.assign({}, prev.items); p.score = prev.score;
+    p.fireRate = prev.fireRate; p.items = Object.assign({}, prev.items); p.score = prev.score; p.rayoCd = prev.rayoCd || 0;
   }
   return p;
 }
@@ -539,7 +568,7 @@ function movePlayer(p, lv) {
   p.animT += Math.abs(p.vx) > 0.4 ? 1 : 0; p.anim = Math.floor(p.animT / 6);
 }
 
-// disparos, carga, patada, hamburguesa
+// disparos, súper disparo cargado, patada, hamburguesa
 function playerActions(p, lv) {
   if (p.dead) return;
   if (p.fireCd > 0) p.fireCd--;
@@ -547,16 +576,37 @@ function playerActions(p, lv) {
   if (Input.burgerP) eatBurger(p);
   if (p.kick) { updateKick(p, lv); return; }
   if (Input.kickP && p.meter >= 100) { startKick(p); return; }
-  // carga del Rayo Calavera
+
+  const CHARGE_TIME = 36; // ~0.6 segundos a 60fps para carga completa
+
+  if (Input.shootP) {
+    if (p.fireCd === 0) fireBasic(p, lv);
+    p.charge = 1;
+  }
+
   if (Input.shoot) {
-    p.charge++;
-    if (p.charge % 12 === 0 && p.charge < 42) Audio.sCharge(p.charge / 42);
-    if (p.charge >= 42 && p.charge % 5 === 0) spawnParts(p.x + p.face * 14, p.y - HERO.chest, 2, ['#ff3fb0', '#fff'], 1.5, 12);
-    if (p.charge === 1 && p.fireCd === 0) fireBasic(p, lv);
-    if (p.st !== 'crouch' && p.st !== 'jump') p.st = p.charge >= 42 ? 'charge' : 'shoot';
-    if (p.st === 'jump') p.st = 'shoot';
+    p.charge = (p.charge || 0) + 1;
+    if (p.st !== 'crouch' && p.st !== 'jump') p.st = p.charge >= 10 ? 'charge' : 'shoot';
+    if (p.st === 'jump') p.st = p.charge >= 10 ? 'charge' : 'shoot';
+
+    if (p.charge < CHARGE_TIME) {
+      if (p.charge % 8 === 0) Audio.sCharge(p.charge / CHARGE_TIME);
+      if (p.charge > 10 && frame % 4 === 0) {
+        spawnParts(p.x + p.face * 12, p.y - (p.st === 'crouch' ? HERO.cchest : HERO.chest), 1, '#ff3fb0', 1, 8);
+      }
+    } else if (p.charge === CHARGE_TIME) {
+      Audio.sCharge(1.4);
+      buzz(50);
+      spawnParts(p.x + p.face * 14, p.y - (p.st === 'crouch' ? HERO.cchest : HERO.chest), 12, ['#ff3fb0', '#fff', '#37f0ff', '#ffe680'], 2.5, 20);
+    } else {
+      if (frame % 3 === 0) {
+        spawnParts(p.x + p.face * 14 + rnd(-3, 3), p.y - (p.st === 'crouch' ? HERO.cchest : HERO.chest) + rnd(-3, 3), 2, ['#ff3fb0', '#fff', '#37f0ff'], 1.8, 12);
+      }
+    }
   } else {
-    if (p.charge >= 42) fireRayo(p, lv);
+    if (p.charge >= CHARGE_TIME) {
+      fireRayo(p, lv);
+    }
     p.charge = 0;
   }
 }
@@ -565,14 +615,16 @@ function fireBasic(p, lv) {
   p.fireCd = rate;
   const y = p.y - (p.st === 'crouch' ? HERO.cchest : HERO.chest);
   const big = lv.arena && p.hp <= 1 && p.burgers === 0; // adrenalina: disparos gigantes
-  lv.pb.push({ x: p.x + p.face * 10, y, vx: p.face * 6, vy: 0, w: big ? 14 : 8, h: big ? 8 : 3, dmg: big ? 2 : 1, charged: false, bounces: p.items.glove ? 3 : 0, life: 90 });
+  lv.pb.push({ x: p.x + p.face * 10, y, vx: p.face * 6.5, vy: 0, w: big ? 14 : 8, h: big ? 8 : 3, dmg: big ? 2 : 1, charged: false, bounces: p.items.glove ? 3 : 0, life: 90 });
   Audio.sShoot();
 }
 function fireRayo(p, lv) {
   const y = p.y - (p.st === 'crouch' ? HERO.cchest : HERO.chest);
-  lv.pb.push({ x: p.x + p.face * 10, y, vx: p.face * 7, vy: 0, w: 22, h: 10, dmg: 6, charged: true, bounces: p.items.glove ? 3 : 0, life: 110, pierce: 3 });
-  Audio.sRayo(); shake(3); buzz(40);
-  p.vx -= p.face * 1.5;
+  // Súper Disparo devastador: gran tamaño, 8 de daño, atraviesa hasta 5 enemigos/escudos
+  lv.pb.push({ x: p.x + p.face * 12, y, vx: p.face * 8, vy: 0, w: 28, h: 14, dmg: 8, charged: true, bounces: p.items.glove ? 3 : 0, life: 120, pierce: 5 });
+  Audio.sRayo(); shake(5); buzz(60);
+  p.vx -= p.face * 2.2;
+  spawnParts(p.x + p.face * 16, y, 18, ['#ff3fb0', '#fff', '#37f0ff', '#ffe680'], 3.5, 24);
 }
 function startKick(p) {
   p.meter = 0; p.kick = { ph: 0, t: 0 }; FX.freeze = 16; FX.negative = 16; Audio.sKick(); buzz(60);
@@ -719,10 +771,14 @@ function updateBullets(lv, p) {
 function drawBullets(lv) {
   for (const b of lv.pb) {
     const x = Math.round(b.x - lv.camx), y = Math.round(b.y);
-    if (b.charged) { // Rayo Calavera
-      R(x - 11, y - 5, 22, 10, '#ff3fb0'); R(x - 9, y - 3, 18, 6, '#ffb3e0'); R(x - 3, y - 2, 6, 4, '#fff');
-      R(x - 2, y - 1, 1, 1, '#ff3fb0'); R(x + 1, y - 1, 1, 1, '#ff3fb0'); R(x - 2, y + 1, 4, 1, '#ff3fb0');
-      if (frame % 3 === 0) spawnParts(b.x, b.y, 1, '#ff3fb0', 1, 10);
+    if (b.charged) { // Súper Disparo / Rayo Calavera
+      R(x - 14, y - 7, 28, 14, '#ff3fb0');
+      R(x - 12, y - 5, 24, 10, '#ffb3e0');
+      R(x - 6, y - 3, 12, 6, '#fff');
+      R(x - 4, y - 2, 2, 2, '#ff3fb0');
+      R(x + 2, y - 2, 2, 2, '#ff3fb0');
+      R(x - 3, y + 1, 6, 2, '#ff3fb0');
+      if (frame % 2 === 0) spawnParts(b.x - b.vx * 0.5, b.y + rnd(-3, 3), 2, ['#ff3fb0', '#37f0ff', '#fff'], 1.5, 12);
     } else { R(x - b.w / 2, y - b.h / 2, b.w, b.h, '#ff3fb0'); R(x - b.w / 2 + 1, y - b.h / 2 + 1, b.w - 2, Math.max(1, b.h - 2), '#ffd6ef'); }
   }
   for (const b of lv.eb) {
@@ -1284,7 +1340,7 @@ function sceneTitle() {
     txt('RÉCORD ARENA: ' + Save.data.best, W / 2, 210, 6, '#37f0ff', 'center');
   }
   txt(IS_TOUCH ? 'CRUCETA · SALTO · PODER · PATADA · HAMBURGUESA' : 'FLECHAS  Z:PODER  X:SALTO  C:PATADA  E:HAMBURGUESA', W / 2, 232, 5, '#8a7aa8', 'center');
-  txt('MANTÉN PODER PARA CARGAR EL RAYO CALAVERA', W / 2, 244, 5, '#8a7aa8', 'center');
+  txt('PODER ACTIVA EL RAYO CALAVERA CADA 4 SEGUNDOS', W / 2, 244, 5, '#8a7aa8', 'center');
 }
 function startCampaign() { GAME.p = newPlayer(); GAME.levelIdx = 0; setScene('portal'); Audio.stop(); Audio.sPortal(); }
 function startArena() { GAME.p = newPlayer(); GAME.p.burgers = 0; GAME.p.items = { shoes: true, visor: true, glove: true }; GAME.p.fireRate = 3; GAME.lv = buildArena(); GAME.p.x = 240; GAME.p.y = 230; setScene('play'); Audio.play('arena'); GAME.lv.msg = { text: 'COLISEO GLITCH', t: 120 }; }
@@ -1365,8 +1421,22 @@ function drawPlay() {
     if (p.eatT > 0 && !p.kick) hst = 'eat';
     else if (lv.state === 'clear' && p.onGround && Math.abs(p.vx) < 0.4 && !Input.shoot && !Input.d) hst = 'victory';
     drawHero(p.x - lv.camx, p.y, p.face, hst, p.anim, p.items, vis);
-    if (p.charge >= 42) { ctx.globalAlpha = .5 + .3 * Math.sin(frame * .5); const cx = Math.round(p.x - lv.camx) + p.face * 14, cy = p.y - HERO.chest; R(cx - 6, cy - 6, 12, 12, '#ff3fb0'); R(cx - 3, cy - 3, 6, 6, '#fff'); ctx.globalAlpha = 1; }
-    else if (p.charge > 8) { const r = p.charge / 42; ctx.globalAlpha = .4; R(Math.round(p.x - lv.camx) + p.face * 14 - r * 5, p.y - HERO.chest - r * 5, r * 10, r * 10, '#ff3fb0'); ctx.globalAlpha = 1; }
+    if (p.charge >= 36) {
+      ctx.globalAlpha = .7 + .3 * Math.sin(frame * .4);
+      const cx = Math.round(p.x - lv.camx) + p.face * 14, cy = p.y - (p.st === 'crouch' ? HERO.cchest : HERO.chest);
+      R(cx - 7, cy - 7, 14, 14, '#ff3fb0');
+      R(cx - 5, cy - 5, 10, 10, '#ffb3e0');
+      R(cx - 3, cy - 3, 6, 6, '#fff');
+      R(cx - 1, cy - 1, 2, 2, '#37f0ff');
+      ctx.globalAlpha = 1;
+    } else if (p.charge > 6) {
+      const r = p.charge / 36;
+      ctx.globalAlpha = .5;
+      const cx = Math.round(p.x - lv.camx) + p.face * 14, cy = p.y - (p.st === 'crouch' ? HERO.cchest : HERO.chest);
+      R(cx - r * 6, cy - r * 6, r * 12, r * 12, '#ff3fb0');
+      R(cx - r * 3, cy - r * 3, r * 6, r * 6, '#fff');
+      ctx.globalAlpha = 1;
+    }
     if (p.fries > 0) { ctx.globalAlpha = .5; R(Math.round(p.x - lv.camx) - 8, p.y - HERO.h - 7, 16, 3, '#e03a2a'); R(Math.round(p.x - lv.camx) - 8, p.y - HERO.h - 7, Math.round(16 * p.fries / 480), 3, '#ffd23f'); ctx.globalAlpha = 1; }
   } else { spawnParts(p.x, p.y - 20, 2, ['#2a63d6', '#f1c49b', '#111'], 2, 30, 0.1); }
   drawBullets(lv); drawParts(lv.camx);

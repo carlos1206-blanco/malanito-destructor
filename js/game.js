@@ -161,8 +161,22 @@ function drawPlay() {
     if (p.eatT > 0 && !p.kick) hst = 'eat';
     else if (lv.state === 'clear' && p.onGround && Math.abs(p.vx) < 0.4 && !Input.shoot && !Input.d) hst = 'victory';
     drawHero(p.x - lv.camx, p.y, p.face, hst, p.anim, p.items, vis);
-    if (p.charge >= 42) { ctx.globalAlpha = .5 + .3 * Math.sin(frame * .5); const cx = Math.round(p.x - lv.camx) + p.face * 14, cy = p.y - HERO.chest; R(cx - 6, cy - 6, 12, 12, '#ff3fb0'); R(cx - 3, cy - 3, 6, 6, '#fff'); ctx.globalAlpha = 1; }
-    else if (p.charge > 8) { const r = p.charge / 42; ctx.globalAlpha = .4; R(Math.round(p.x - lv.camx) + p.face * 14 - r * 5, p.y - HERO.chest - r * 5, r * 10, r * 10, '#ff3fb0'); ctx.globalAlpha = 1; }
+    if (p.charge >= 36) {
+      ctx.globalAlpha = .7 + .3 * Math.sin(frame * .4);
+      const cx = Math.round(p.x - lv.camx) + p.face * 14, cy = p.y - (p.st === 'crouch' ? HERO.cchest : HERO.chest);
+      R(cx - 7, cy - 7, 14, 14, '#ff3fb0');
+      R(cx - 5, cy - 5, 10, 10, '#ffb3e0');
+      R(cx - 3, cy - 3, 6, 6, '#fff');
+      R(cx - 1, cy - 1, 2, 2, '#37f0ff');
+      ctx.globalAlpha = 1;
+    } else if (p.charge > 6) {
+      const r = p.charge / 36;
+      ctx.globalAlpha = .5;
+      const cx = Math.round(p.x - lv.camx) + p.face * 14, cy = p.y - (p.st === 'crouch' ? HERO.cchest : HERO.chest);
+      R(cx - r * 6, cy - r * 6, r * 12, r * 12, '#ff3fb0');
+      R(cx - r * 3, cy - r * 3, r * 6, r * 6, '#fff');
+      ctx.globalAlpha = 1;
+    }
     if (p.fries > 0) { ctx.globalAlpha = .5; R(Math.round(p.x - lv.camx) - 8, p.y - HERO.h - 7, 16, 3, '#e03a2a'); R(Math.round(p.x - lv.camx) - 8, p.y - HERO.h - 7, Math.round(16 * p.fries / 480), 3, '#ffd23f'); ctx.globalAlpha = 1; }
   } else { spawnParts(p.x, p.y - 20, 2, ['#2a63d6', '#f1c49b', '#111'], 2, 30, 0.1); }
   drawBullets(lv); drawParts(lv.camx);

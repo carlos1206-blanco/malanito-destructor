@@ -188,7 +188,7 @@ function movePlayer(p, lv) {
   p.animT += Math.abs(p.vx) > 0.4 ? 1 : 0; p.anim = Math.floor(p.animT / 6);
 }
 
-// disparos, carga, patada, hamburguesa
+// disparos, súper disparo cargado, patada, hamburguesa
 function playerActions(p, lv) {
   if (p.dead) return;
   if (p.fireCd > 0) p.fireCd--;
@@ -196,15 +196,38 @@ function playerActions(p, lv) {
   if (Input.burgerP) eatBurger(p);
   if (p.kick) { updateKick(p, lv); return; }
   if (Input.kickP && p.meter >= 100) { startKick(p); return; }
-  if (p.rayoCd > 0) p.rayoCd--;
-  // Disparo del Rayo Calavera con cooldown
-  if (Input.shootP && p.rayoCd === 0) {
-    fireRayo(p, lv);
-    p.rayoCd = 240; // 4 segundos aprox a 60fps
-  } else if (Input.shoot) {
-    if (p.fireCd === 0 && p.rayoCd !== 240) fireBasic(p, lv);
-    if (p.st !== 'crouch' && p.st !== 'jump') p.st = 'shoot';
-    if (p.st === 'jump') p.st = 'shoot';
+
+  const CHARGE_TIME = 36; // ~0.6 segundos a 60fps para carga completa
+
+  if (Input.shootP) {
+    if (p.fireCd === 0) fireBasic(p, lv);
+    p.charge = 1;
+  }
+
+  if (Input.shoot) {
+    p.charge = (p.charge || 0) + 1;
+    if (p.st !== 'crouch' && p.st !== 'jump') p.st = p.charge >= 10 ? 'charge' : 'shoot';
+    if (p.st === 'jump') p.st = p.charge >= 10 ? 'charge' : 'shoot';
+
+    if (p.charge < CHARGE_TIME) {
+      if (p.charge % 8 === 0) Audio.sCharge(p.charge / CHARGE_TIME);
+      if (p.charge > 10 && frame % 4 === 0) {
+        spawnParts(p.x + p.face * 12, p.y - (p.st === 'crouch' ? HERO.cchest : HERO.chest), 1, '#ff3fb0', 1, 8);
+      }
+    } else if (p.charge === CHARGE_TIME) {
+      Audio.sCharge(1.4);
+      buzz(50);
+      spawnParts(p.x + p.face * 14, p.y - (p.st === 'crouch' ? HERO.cchest : HERO.chest), 12, ['#ff3fb0', '#fff', '#37f0ff', '#ffe680'], 2.5, 20);
+    } else {
+      if (frame % 3 === 0) {
+        spawnParts(p.x + p.face * 14 + rnd(-3, 3), p.y - (p.st === 'crouch' ? HERO.cchest : HERO.chest) + rnd(-3, 3), 2, ['#ff3fb0', '#fff', '#37f0ff'], 1.8, 12);
+      }
+    }
+  } else {
+    if (p.charge >= CHARGE_TIME) {
+      fireRayo(p, lv);
+    }
+    p.charge = 0;
   }
 }
 function fireBasic(p, lv) {
@@ -212,14 +235,16 @@ function fireBasic(p, lv) {
   p.fireCd = rate;
   const y = p.y - (p.st === 'crouch' ? HERO.cchest : HERO.chest);
   const big = lv.arena && p.hp <= 1 && p.burgers === 0; // adrenalina: disparos gigantes
-  lv.pb.push({ x: p.x + p.face * 10, y, vx: p.face * 6, vy: 0, w: big ? 14 : 8, h: big ? 8 : 3, dmg: big ? 2 : 1, charged: false, bounces: p.items.glove ? 3 : 0, life: 90 });
+  lv.pb.push({ x: p.x + p.face * 10, y, vx: p.face * 6.5, vy: 0, w: big ? 14 : 8, h: big ? 8 : 3, dmg: big ? 2 : 1, charged: false, bounces: p.items.glove ? 3 : 0, life: 90 });
   Audio.sShoot();
 }
 function fireRayo(p, lv) {
   const y = p.y - (p.st === 'crouch' ? HERO.cchest : HERO.chest);
-  lv.pb.push({ x: p.x + p.face * 10, y, vx: p.face * 7, vy: 0, w: 22, h: 10, dmg: 6, charged: true, bounces: p.items.glove ? 3 : 0, life: 110, pierce: 3 });
-  Audio.sRayo(); shake(3); buzz(40);
-  p.vx -= p.face * 1.5;
+  // Súper Disparo devastador: gran tamaño, 8 de daño, atraviesa hasta 5 enemigos/escudos
+  lv.pb.push({ x: p.x + p.face * 12, y, vx: p.face * 8, vy: 0, w: 28, h: 14, dmg: 8, charged: true, bounces: p.items.glove ? 3 : 0, life: 120, pierce: 5 });
+  Audio.sRayo(); shake(5); buzz(60);
+  p.vx -= p.face * 2.2;
+  spawnParts(p.x + p.face * 16, y, 18, ['#ff3fb0', '#fff', '#37f0ff', '#ffe680'], 3.5, 24);
 }
 function startKick(p) {
   p.meter = 0; p.kick = { ph: 0, t: 0 }; FX.freeze = 16; FX.negative = 16; Audio.sKick(); buzz(60);
@@ -366,10 +391,14 @@ function updateBullets(lv, p) {
 function drawBullets(lv) {
   for (const b of lv.pb) {
     const x = Math.round(b.x - lv.camx), y = Math.round(b.y);
-    if (b.charged) { // Rayo Calavera
-      R(x - 11, y - 5, 22, 10, '#ff3fb0'); R(x - 9, y - 3, 18, 6, '#ffb3e0'); R(x - 3, y - 2, 6, 4, '#fff');
-      R(x - 2, y - 1, 1, 1, '#ff3fb0'); R(x + 1, y - 1, 1, 1, '#ff3fb0'); R(x - 2, y + 1, 4, 1, '#ff3fb0');
-      if (frame % 3 === 0) spawnParts(b.x, b.y, 1, '#ff3fb0', 1, 10);
+    if (b.charged) { // Súper Disparo / Rayo Calavera
+      R(x - 14, y - 7, 28, 14, '#ff3fb0');
+      R(x - 12, y - 5, 24, 10, '#ffb3e0');
+      R(x - 6, y - 3, 12, 6, '#fff');
+      R(x - 4, y - 2, 2, 2, '#ff3fb0');
+      R(x + 2, y - 2, 2, 2, '#ff3fb0');
+      R(x - 3, y + 1, 6, 2, '#ff3fb0');
+      if (frame % 2 === 0) spawnParts(b.x - b.vx * 0.5, b.y + rnd(-3, 3), 2, ['#ff3fb0', '#37f0ff', '#fff'], 1.5, 12);
     } else { R(x - b.w / 2, y - b.h / 2, b.w, b.h, '#ff3fb0'); R(x - b.w / 2 + 1, y - b.h / 2 + 1, b.w - 2, Math.max(1, b.h - 2), '#ffd6ef'); }
   }
   for (const b of lv.eb) {

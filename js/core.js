@@ -183,7 +183,25 @@ const Input = {
       ctx.globalAlpha = 0.9; txt(o.label, o.x, o.y - 3, 6, '#fff', 'center', false);
     };
     circ(b.jump, this.jump);
-    circ(b.shoot, this.shoot);
+    const shootCharged = p && p.charge >= 36;
+    if (shootCharged) {
+      ctx.globalAlpha = 0.5 + 0.4 * Math.sin(frame * 0.35);
+      ctx.fillStyle = '#ff3fb0';
+      ctx.beginPath(); ctx.arc(b.shoot.x, b.shoot.y, b.shoot.r + 5 + Math.sin(frame * 0.35) * 2, 0, 7); ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+      for (let i = 0; i < 4; i++) {
+        const a = frame * 0.25 + i * 1.57;
+        ctx.beginPath();
+        ctx.moveTo(b.shoot.x + Math.cos(a) * (b.shoot.r + 2), b.shoot.y + Math.sin(a) * (b.shoot.r + 2));
+        ctx.lineTo(b.shoot.x + Math.cos(a + 0.2) * (b.shoot.r + 7), b.shoot.y + Math.sin(a + 0.2) * (b.shoot.r + 7));
+        ctx.stroke();
+      }
+    } else if (p && p.charge > 0) {
+      const prog = Math.min(1, p.charge / 36);
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.globalAlpha = 0.85;
+      ctx.beginPath(); ctx.arc(b.shoot.x, b.shoot.y, b.shoot.r + 3, -Math.PI / 2, -Math.PI / 2 + prog * Math.PI * 2); ctx.stroke();
+    }
+    circ(b.shoot, this.shoot, shootCharged);
     const ready = p && p.meter >= 100;
     if (ready) {
       ctx.globalAlpha = 0.5 + 0.4 * Math.sin(frame * 0.3); ctx.fillStyle = '#ffe680'; ctx.beginPath(); ctx.arc(b.kick.x, b.kick.y, b.kick.r + 5 + Math.sin(frame * .3) * 2, 0, 7); ctx.fill();
