@@ -79,8 +79,8 @@ function sceneTitle() {
     if ((Input.jumpP || Input.keys.Enter) && t > 30) { Audio.sInsert(); if (GAME.sel === 0) startCampaign(); else startArena(); return; }
     txt('RÉCORD ARENA: ' + Save.data.best, W / 2, 210, 6, '#37f0ff', 'center');
   }
-  txt(IS_TOUCH ? 'CRUCETA · SALTO · PODER · PATADA · HAMBURGUESA' : 'FLECHAS  Z:PODER  X:SALTO  C:PATADA  E:HAMBURGUESA', W / 2, 232, 5, '#8a7aa8', 'center');
-  txt('PODER ACTIVA EL RAYO CALAVERA CADA 4 SEGUNDOS', W / 2, 244, 5, '#8a7aa8', 'center');
+  txt(IS_TOUCH ? 'CRUCETA · SALTO · PODER · PATADA · PAUSA ARRIBA' : 'FLECHAS · Z:PODER · X:SALTO · C:PATADA · P:PAUSA', W / 2, 232, 5, '#8a7aa8', 'center');
+  txt('MANTÉN EL BOTÓN ROSADO PARA UN SÚPER DISPARO', W / 2, 244, 5, '#ffd23f', 'center');
 }
 function startCampaign() { GAME.p = newPlayer(); GAME.levelIdx = 0; setScene('portal'); Audio.stop(); Audio.sPortal(); }
 function startArena() { GAME.p = newPlayer(); GAME.p.burgers = 0; GAME.p.items = { shoes: true, visor: true, glove: true }; GAME.p.fireRate = 3; GAME.lv = buildArena(); GAME.p.x = 240; GAME.p.y = 230; setScene('play'); Audio.play('arena'); GAME.lv.msg = { text: 'COLISEO GLITCH', t: 120 }; }
@@ -210,22 +210,18 @@ function drawPlay() {
 function drawStatic(a) { ctx.globalAlpha = a; for (let i = 0; i < 300; i++) R(Math.random() * W, Math.random() * H, 2, 1, Math.random() < .5 ? '#fff' : '#888'); for (let y = 0; y < H; y += 3) R(0, y, W, 1, '#000'); ctx.globalAlpha = 1; }
 
 function drawHUD(p, lv) {
-  // Botón de pausa siempre visible en la esquina superior derecha
+  // Botón de pausa (centro superior de la pantalla, ultra visible)
   const pb = Input.btn.pause;
-  ctx.globalAlpha = 0.92;
-  R(pb.x, pb.y, pb.w, pb.h, '#1a1030');
+  ctx.globalAlpha = 0.95;
+  R(pb.x, pb.y, pb.w, pb.h, '#160d2e');
   ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 1.5;
   ctx.strokeRect(pb.x + 0.5, pb.y + 0.5, pb.w - 1, pb.h - 1);
   if (GAME.pause) {
-    ctx.fillStyle = '#37f0ff';
-    ctx.beginPath();
-    ctx.moveTo(pb.x + 10, pb.y + 5);
-    ctx.lineTo(pb.x + 22, pb.y + 11);
-    ctx.lineTo(pb.x + 10, pb.y + 17);
-    ctx.fill();
+    txt('▶ PLAY', pb.x + pb.w / 2, pb.y + 4, 7, '#37f0ff', 'center');
   } else {
-    R(pb.x + 8, pb.y + 5, 4, 12, '#fff');
-    R(pb.x + 17, pb.y + 5, 4, 12, '#fff');
+    R(pb.x + 8, pb.y + 4, 3, 10, '#fff');
+    R(pb.x + 14, pb.y + 4, 3, 10, '#fff');
+    txt('PAUSA', pb.x + 38, pb.y + 5, 7, '#ffd23f', 'center');
   }
   ctx.globalAlpha = 1;
 

@@ -217,7 +217,7 @@ const Input = {
     shoot: { x: 376, y: 238, r: 21, col: '#ff3fb0', label: 'PODER' },
     kick: { x: 428, y: 168, r: 19, col: '#ffcc33', label: 'PATADA' },
     burger: { x: 6, y: 40, w: 48, h: 22 },
-    pause: { x: W - 36, y: 32, w: 30, h: 22 },
+    pause: { x: 208, y: 4, w: 64, h: 18 },
     dpad: { x: 62, y: 208, r: 46 }
   },
   update() {
@@ -256,7 +256,7 @@ const Input = {
       if (Math.hypot(t.x - b.shoot.x, t.y - b.shoot.y) < b.shoot.r + 14 || (t.x > b.shoot.x - 22 && t.x < b.shoot.x + 22 && t.y > b.shoot.y - 20 && t.y < b.shoot.y + 25)) shoot = true;
       if (Math.hypot(t.x - b.kick.x, t.y - b.kick.y) < b.kick.r + 12 || (t.x > b.kick.x - 18 && t.x < b.kick.x + 25 && t.y > b.kick.y - 20 && t.y < b.kick.y + 25)) kick = true;
       if (t.x >= b.burger.x - 10 && t.x <= b.burger.x + b.burger.w + 14 && t.y >= b.burger.y - 10 && t.y <= b.burger.y + b.burger.h + 14) burger = true;
-      if (t.x >= b.pause.x - 10 && t.x <= b.pause.x + b.pause.w + 12 && t.y >= b.pause.y - 10 && t.y <= b.pause.y + b.pause.h + 12) pause = true;
+      if (t.x >= b.pause.x - 16 && t.x <= b.pause.x + b.pause.w + 16 && t.y >= 0 && t.y <= b.pause.y + b.pause.h + 16) pause = true;
     }
     this.jumpP = jump && !this.jump; this.kickP = kick && !this.kick; this.burgerP = burger && !this.burger;
     this.shootP = shoot && !this.shoot;
@@ -1442,8 +1442,8 @@ function sceneTitle() {
     if ((Input.jumpP || Input.keys.Enter) && t > 30) { Audio.sInsert(); if (GAME.sel === 0) startCampaign(); else startArena(); return; }
     txt('RÉCORD ARENA: ' + Save.data.best, W / 2, 210, 6, '#37f0ff', 'center');
   }
-  txt(IS_TOUCH ? 'CRUCETA · SALTO · PODER · PATADA · HAMBURGUESA' : 'FLECHAS  Z:PODER  X:SALTO  C:PATADA  E:HAMBURGUESA', W / 2, 232, 5, '#8a7aa8', 'center');
-  txt('PODER ACTIVA EL RAYO CALAVERA CADA 4 SEGUNDOS', W / 2, 244, 5, '#8a7aa8', 'center');
+  txt(IS_TOUCH ? 'CRUCETA · SALTO · PODER · PATADA · PAUSA ARRIBA' : 'FLECHAS · Z:PODER · X:SALTO · C:PATADA · P:PAUSA', W / 2, 232, 5, '#8a7aa8', 'center');
+  txt('MANTÉN EL BOTÓN ROSADO PARA UN SÚPER DISPARO', W / 2, 244, 5, '#ffd23f', 'center');
 }
 function startCampaign() { GAME.p = newPlayer(); GAME.levelIdx = 0; setScene('portal'); Audio.stop(); Audio.sPortal(); }
 function startArena() { GAME.p = newPlayer(); GAME.p.burgers = 0; GAME.p.items = { shoes: true, visor: true, glove: true }; GAME.p.fireRate = 3; GAME.lv = buildArena(); GAME.p.x = 240; GAME.p.y = 230; setScene('play'); Audio.play('arena'); GAME.lv.msg = { text: 'COLISEO GLITCH', t: 120 }; }
@@ -1573,22 +1573,18 @@ function drawPlay() {
 function drawStatic(a) { ctx.globalAlpha = a; for (let i = 0; i < 300; i++) R(Math.random() * W, Math.random() * H, 2, 1, Math.random() < .5 ? '#fff' : '#888'); for (let y = 0; y < H; y += 3) R(0, y, W, 1, '#000'); ctx.globalAlpha = 1; }
 
 function drawHUD(p, lv) {
-  // Botón de pausa siempre visible en la esquina superior derecha
+  // Botón de pausa (centro superior de la pantalla, ultra visible)
   const pb = Input.btn.pause;
-  ctx.globalAlpha = 0.92;
-  R(pb.x, pb.y, pb.w, pb.h, '#1a1030');
+  ctx.globalAlpha = 0.95;
+  R(pb.x, pb.y, pb.w, pb.h, '#160d2e');
   ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 1.5;
   ctx.strokeRect(pb.x + 0.5, pb.y + 0.5, pb.w - 1, pb.h - 1);
   if (GAME.pause) {
-    ctx.fillStyle = '#37f0ff';
-    ctx.beginPath();
-    ctx.moveTo(pb.x + 10, pb.y + 5);
-    ctx.lineTo(pb.x + 22, pb.y + 11);
-    ctx.lineTo(pb.x + 10, pb.y + 17);
-    ctx.fill();
+    txt('▶ PLAY', pb.x + pb.w / 2, pb.y + 4, 7, '#37f0ff', 'center');
   } else {
-    R(pb.x + 8, pb.y + 5, 4, 12, '#fff');
-    R(pb.x + 17, pb.y + 5, 4, 12, '#fff');
+    R(pb.x + 8, pb.y + 4, 3, 10, '#fff');
+    R(pb.x + 14, pb.y + 4, 3, 10, '#fff');
+    txt('PAUSA', pb.x + 38, pb.y + 5, 7, '#ffd23f', 'center');
   }
   ctx.globalAlpha = 1;
 

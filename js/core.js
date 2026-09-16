@@ -143,7 +143,7 @@ const Input = {
     shoot: { x: 376, y: 238, r: 21, col: '#ff3fb0', label: 'PODER' },
     kick: { x: 428, y: 168, r: 19, col: '#ffcc33', label: 'PATADA' },
     burger: { x: 6, y: 40, w: 48, h: 22 },
-    pause: { x: W - 36, y: 32, w: 30, h: 22 },
+    pause: { x: 208, y: 4, w: 64, h: 18 },
     dpad: { x: 62, y: 208, r: 46 }
   },
   update() {
@@ -182,7 +182,7 @@ const Input = {
       if (Math.hypot(t.x - b.shoot.x, t.y - b.shoot.y) < b.shoot.r + 14 || (t.x > b.shoot.x - 22 && t.x < b.shoot.x + 22 && t.y > b.shoot.y - 20 && t.y < b.shoot.y + 25)) shoot = true;
       if (Math.hypot(t.x - b.kick.x, t.y - b.kick.y) < b.kick.r + 12 || (t.x > b.kick.x - 18 && t.x < b.kick.x + 25 && t.y > b.kick.y - 20 && t.y < b.kick.y + 25)) kick = true;
       if (t.x >= b.burger.x - 10 && t.x <= b.burger.x + b.burger.w + 14 && t.y >= b.burger.y - 10 && t.y <= b.burger.y + b.burger.h + 14) burger = true;
-      if (t.x >= b.pause.x - 10 && t.x <= b.pause.x + b.pause.w + 12 && t.y >= b.pause.y - 10 && t.y <= b.pause.y + b.pause.h + 12) pause = true;
+      if (t.x >= b.pause.x - 16 && t.x <= b.pause.x + b.pause.w + 16 && t.y >= 0 && t.y <= b.pause.y + b.pause.h + 16) pause = true;
     }
     this.jumpP = jump && !this.jump; this.kickP = kick && !this.kick; this.burgerP = burger && !this.burger;
     this.shootP = shoot && !this.shoot;
