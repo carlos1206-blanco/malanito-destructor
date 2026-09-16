@@ -1364,11 +1364,11 @@ class BossNucleo extends Boss {
 // ============================================================
 //  ESTADO GLOBAL DEL JUEGO
 // ============================================================
-const GAME = { scene: 'boot', t: 0, p: null, lv: null, levelIdx: 0, photo: null, photoReady: false, shop: null, pause: false, sel: 0, after: null, endT: 0, rank: '' };
+const GAME = { scene: 'boot', t: 0, p: null, lv: null, levelIdx: 0, photo: null, photoReady: false, shop: null, pause: false, pauseCooldown: 0, sel: 0, after: null, endT: 0, rank: '' };
 GAME.photo = new Image(); GAME.photo.onload = () => { GAME.photoReady = true; }; GAME.photo.src = PHOTO_SRC;
 const pxc = document.createElement('canvas'); pxc.width = 48; pxc.height = 27; const pxx = pxc.getContext('2d');
 
-function setScene(s) { GAME.scene = s; GAME.t = 0; Input.tap = null; }
+function setScene(s) { GAME.scene = s; GAME.t = 0; GAME.pause = false; GAME.pauseCooldown = 0; Input.tap = null; }
 
 // ---------- fondo del salón arcade (pantalla de título) ----------
 function drawArcadeRoom(t, noMachine) {
@@ -1479,12 +1479,26 @@ function startLevel(idx) {
 //  BUCLE DE NIVEL (campaña, bonificación y arena comparten motor)
 // ============================================================
 function updatePlay() {
-  const lv = GAME.lv, p = GAME.p; lv.t++;
-  if (Input.pauseP) { GAME.pause = !GAME.pause; Audio.sStatic(); }
-  if (GAME.pause) {
-    if (Input.tap) { GAME.pause = false; Audio.sStatic(); Input.tap = null; }
+  const lv = GAME.lv, p = GAME.p;
+  if (Input.pauseP) {
+    GAME.pause = !GAME.pause;
+    Audio.sStatic();
+    Input.tap = null;
+    GAME.pauseCooldown = 15;
     return;
   }
+  if (GAME.pause) {
+    if (GAME.pauseCooldown > 0) {
+      GAME.pauseCooldown--;
+      Input.tap = null;
+    } else if (Input.tap) {
+      GAME.pause = false;
+      Audio.sStatic();
+      Input.tap = null;
+    }
+    return;
+  }
+  lv.t++;
   updateHazards(lv);
   if (lv.arena) updateArena(lv, p);
   if (lv.bonus) updateBonus(lv, p);
@@ -1771,14 +1785,14 @@ function tick(now) {
   render();
 }
 function step() {
-  frame++; Input.update(); Audio.update();
+  frame++; Input.update();
+  if (!GAME.pause) Audio.update();
   if (FX.shake > 0) FX.shake = Math.max(0, FX.shake - 0.8); if (FX.flash > 0) FX.flash--; if (FX.glitch > 0) FX.glitch--; if (FX.negative > 0) FX.negative--;
   if (FX.freeze > 0) { FX.freeze--; return; }
-  GAME.t++;
   switch (GAME.scene) {
-    case 'boot': if (GAME.t > 2) { GAME.introPhase = 0; setScene('intro'); } break;
-    case 'play': updatePlay(); break;
-    default: break;
+    case 'boot': GAME.t++; if (GAME.t > 2) { GAME.introPhase = 0; setScene('intro'); } break;
+    case 'play': updatePlay(); if (!GAME.pause) GAME.t++; break;
+    default: GAME.t++; break;
   }
 }
 function render() {
